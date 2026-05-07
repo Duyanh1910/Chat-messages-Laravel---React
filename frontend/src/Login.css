@@ -1,0 +1,107 @@
+@tailwind components;
+
+@layer components {
+  .login-wrapper {
+    @apply flex flex-col items-center justify-center min-h-screen bg-white font-sans p-4 sm:p-6;
+  }
+
+  .login-content {
+    @apply flex flex-col items-center w-full max-w-[400px];
+  }
+
+  .login-logo {
+    @apply w-[60px] h-[60px] mb-5;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M75 30C75 18.9543 66.0457 10 55 10H30C18.9543 10 10 18.9543 10 30C10 41.0457 18.9543 50 30 50H35V65L50 50H55C66.0457 50 75 41.0457 75 30Z' fill='%23E0E7FF'/%3E%3Cpath d='M90 55C90 43.9543 81.0457 35 70 35H45C33.9543 35 25 43.9543 25 55C25 66.0457 33.9543 75 45 75H50V90L65 75H70C81.0457 75 90 66.0457 90 55Z' fill='%234F46E5'/%3E%3Ccircle cx='45' cy='55' r='4' fill='white' /%3E%3Ccircle cx='57.5' cy='55' r='4' fill='white' /%3E%3Ccircle cx='70' cy='55' r='4' fill='white' /%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+  .login-title {
+    @apply text-[26px] sm:text-[30px] leading-[1.2] text-[#1c1e21] mb-6 sm:mb-8 text-center font-normal tracking-tight;
+  }
+
+  .login-form {
+    @apply flex flex-col w-full items-center gap-[12px];
+  }
+
+  .input-group {
+    @apply w-full flex flex-col gap-1 relative;
+  }
+
+  .login-input {
+    @apply w-full h-[48px] px-4 rounded-[6px] border border-[#dddfe2] bg-white text-[15px] text-[#1d2129] focus:outline-none focus:border-[#0084ff] focus:ring-1 focus:ring-[#0084ff] placeholder:text-[#90949c] transition-colors;
+  }
+
+  .login-input-password {
+    @apply pr-12;
+  }
+
+  .login-input-error {
+    @apply border-red-500 focus:border-red-500 focus:ring-red-500;
+  }
+
+  .error-text {
+    @apply text-red-500 text-[12px] ml-1;
+  }
+
+  .success-msg {
+    @apply w-full p-3 bg-green-50 text-green-700 text-[14px] rounded-[6px] mb-2 text-center border border-green-200;
+  }
+
+  .password-toggle {
+    @apply absolute right-4 top-[24px] -translate-y-1/2 text-[#90949c] hover:text-[#1d2129] cursor-pointer transition-colors;
+  }
+
+  .login-btn {
+    @apply flex items-center justify-center gap-2 w-full mt-1 h-[44px] rounded-[6px] bg-[#0084ff] hover:bg-[#0073e6] text-white font-semibold text-[15px] transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed;
+  }
+
+  .divider {
+    @apply flex items-center w-full my-3;
+  }
+
+  .divider-line {
+    @apply flex-1 h-[1px] bg-[#ccd0d5];
+  }
+
+  .divider-text {
+    @apply px-4 text-[12px] text-[#4b4f56] uppercase;
+  }
+
+  .social-btn {
+    @apply flex items-center justify-center gap-2 w-full h-[44px] rounded-[6px] border border-[#dddfe2] bg-white text-[#4b4f56] font-semibold text-[14px] hover:bg-zinc-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed;
+  }
+
+  .icon-google {
+    @apply w-[18px] h-[18px];
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%23FFC107' d='M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z'/%3E%3Cpath fill='%23FF3D00' d='M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z'/%3E%3Cpath fill='%234CAF50' d='M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z'/%3E%3Cpath fill='%231976D2' d='M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z'/%3E%3C/svg%3E");
+    background-size: cover;
+  }
+
+  .icon-facebook {
+    @apply w-[18px] h-[18px];
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%233F51B5' d='M42,37c0,2.762-2.238,5-5,5H11c-2.761,0-5-2.238-5-5V11c0-2.762,2.239-5,5-5h26c2.762,0,5,2.238,5,5V37z'/%3E%3Cpath fill='%23FFF' d='M34.368,25H31v13h-5V25h-3v-4h3v-2.41c0.002-4.078,2.456-6.286,6.128-6.286c1.743,0,3.242,0.13,3.678,0.188v4.259l-2.527,0.001c-1.979,0-2.361,0.94-2.361,2.319V21h4.747L34.368,25z'/%3E%3C/svg%3E");
+    background-size: cover;
+  }
+
+  .checkbox-wrapper {
+    @apply flex items-center gap-2 mt-1 cursor-pointer text-[13px] text-[#737373] w-full;
+  }
+
+  .checkbox-input {
+    @apply w-[14px] h-[14px] rounded-[3px] border-[#dddfe2] text-[#0084ff] focus:ring-[#0084ff] cursor-pointer;
+  }
+
+  .login-footer {
+    @apply flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 text-[13px] mt-6;
+  }
+
+  .login-link {
+    @apply text-[#737373] hover:underline cursor-pointer transition-colors;
+  }
+  
+  .login-link-bold {
+    @apply font-semibold text-[#1c1e21] hover:underline cursor-pointer transition-colors;
+  }
+}

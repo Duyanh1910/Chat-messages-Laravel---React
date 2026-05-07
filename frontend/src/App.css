@@ -1,0 +1,67 @@
+@tailwind components;
+
+@layer components {
+  .app-wrapper {
+    @apply flex h-screen w-full bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300;
+  }
+  
+  .sidebar {
+    @apply hidden md:flex w-[360px] flex-col border-r bg-white dark:bg-zinc-900 dark:border-zinc-800 transition-colors duration-300;
+  }
+  
+  .chat-container {
+    @apply flex flex-1 flex-col bg-white dark:bg-zinc-900 transition-colors duration-300 relative;
+  }
+
+  .btn-action {
+    @apply h-9 w-9 rounded-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300;
+  }
+  
+  .btn-icon {
+    @apply h-9 w-9 text-blue-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full;
+  }
+
+  .contact-item {
+    @apply flex items-center gap-3 px-3 py-2 mx-2 rounded-lg cursor-pointer transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50;
+  }
+  
+  .contact-item-active {
+    @apply bg-zinc-100 dark:bg-zinc-800/80;
+  }
+
+  .msg-bubble-me {
+    @apply rounded-[20px] px-4 py-2 text-[15px] bg-blue-500 text-white;
+  }
+  
+  .msg-bubble-other {
+    @apply rounded-[20px] px-4 py-2 text-[15px] bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100;
+  }
+
+  .msg-file-me {
+    @apply bg-blue-600 text-white;
+  }
+  
+  .msg-file-other {
+    @apply bg-zinc-200 text-zinc-900;
+  }
+
+  .chat-input {
+    @apply w-full rounded-full bg-zinc-100 dark:bg-zinc-800 border-none pl-4 pr-10 py-5 text-[15px] dark:text-zinc-100 focus-visible:ring-0 placeholder:text-zinc-500;
+  }
+
+  .typing-indicator {
+    @apply flex gap-1.5 bg-zinc-100 dark:bg-zinc-800 px-4 py-3 rounded-2xl w-fit items-center border dark:border-zinc-700 shadow-sm;
+  }
+
+  .typing-dot {
+    @apply w-2 h-2 bg-zinc-400 rounded-full animate-bounce;
+  }
+
+  .typing-dot:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .typing-dot:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+}
