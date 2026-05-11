@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Musonza\Chat\Facades\ChatFacade as Chat;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,16 +16,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory()->create([
+        $user1 = User::factory()->create([
                     'name' => 'Price Jakubowski',
                     'email' => 'khachhang@gmail.com',
                     'password' => bcrypt('password'),
                 ]);
 
-        User::factory()->create([
+        $user2 = User::factory()->create([
             'name' => 'Tito Ankunding II',
             'email' => 'admin@gmail.com',
             'password' => bcrypt('password'),
         ]);
+
+        Chat::createConversation([$user1,$user2]);
     }
 }
