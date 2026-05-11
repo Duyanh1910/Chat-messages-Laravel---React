@@ -26,7 +26,7 @@ final class UploadAttachmentRequest extends FormRequest
             ],
             'files.*' => [
                 'file',
-                'mimes:jpg,jpeg,png,docx,pdf,xlsx,txt,doc,mp4,avi,mp3',
+                'mimes:jpg,jpeg,png,docx,pdf,xlsx,txt,doc,mp4,avi,mp3,gif',
                 'max:10240',
             ],
         ];

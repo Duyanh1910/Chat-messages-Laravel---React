@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
-import axios from "axios";
 import "./Login.css";
 import api from "@/api/api";
 type ViewState = "login" | "register" | "forgot";
