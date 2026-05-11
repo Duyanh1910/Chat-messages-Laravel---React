@@ -44,7 +44,7 @@ final class GetMessagesAction
             ->setParticipant($user)
             ->setCursorPaginationParams([
                 'perPage' => $perPage,
-                'sorting' => 'asc',
+                'sorting' => 'desc',
                 'cursor' => $cursor,
             ])
             ->getMessagesWithCursor();

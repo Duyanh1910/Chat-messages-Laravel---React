@@ -18,7 +18,6 @@ final class UploadAttachmentRequest extends FormRequest
             'body' => [
                 'nullable',
                 'string',
-                'required_without:files',
             ],
             'files' => [
                 'required',
@@ -27,10 +26,7 @@ final class UploadAttachmentRequest extends FormRequest
             ],
             'files.*' => [
                 'file',
-                'mimes:jpg,jpeg,png,
-                docx,pdf,xlsx,txt,
-                mp4,avi,
-                mp3',
+                'mimes:jpg,jpeg,png,docx,pdf,xlsx,txt,doc,mp4,avi,mp3',
                 'max:10240',
             ],
         ];

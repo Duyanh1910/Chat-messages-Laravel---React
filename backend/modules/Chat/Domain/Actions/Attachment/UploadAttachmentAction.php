@@ -48,7 +48,7 @@ final class UploadAttachmentAction
         $data = [];
         $messages = [];
 
-        $body = $body ?? 'Đã gửi file đính kèm.';
+        $messageBody = empty($body) ? "Đã gửi tệp đính kèm" : $body;
 
         foreach ($files as $file) {
             $path = $file->store('messages_files', 'private');
@@ -60,7 +60,7 @@ final class UploadAttachmentAction
                 'size' => $file->getSize(),
                 'mime_type' => $mimeType,
             ];
-            $message = Chat::message($body)
+            $message = Chat::message($messageBody)
                 ->type($type)
                 ->data($data)
                 ->from($user)

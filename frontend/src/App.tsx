@@ -1,509 +1,460 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; 
-import { Camera, Sticker, Send, Smile, ImageIcon, MoreVertical, Paperclip, Search, Phone, Video, Sun, Moon, ThumbsUp, Edit, LogOut, Check, CheckCheck, Menu } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Camera,
+  Send,
+  Smile,
+  ImageIcon,
+  Paperclip,
+  Phone,
+  Video,
+  Sun,
+  Moon,
+  ThumbsUp,
+  LogOut,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import EmojiPicker, { Theme } from 'emoji-picker-react';
-import { Virtuoso } from 'react-virtuoso';
-import axios from 'axios';
-import './App.css';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import EmojiPicker, { Theme } from "emoji-picker-react";
+import { Virtuoso } from "react-virtuoso";
+import toast, { Toaster } from "react-hot-toast";
+import axios from "axios";
+import "./App.css";
+import api from "@/api/api";
 
-const currentUser = { id: 1, name: "Trần Long Nhật" };
+// --- CẤU HÌNH AXIOS ---
+// Tự động nhét Token vào
 
-const contacts = [
-  { id: 2, name: "Trần Duy Anh", lastMsg: "Phần Laravel xong chưa ông?", time: "2 phút", avatar: "https://i.pravatar.cc/150?u=duyanh", online: true, unreadCount: 3 },
-  { id: 3, name: "Vũ Quốc Pháp", lastMsg: "Check lại cái MQTT nhé.", time: "1 giờ", avatar: "https://i.pravatar.cc/150?u=phap", online: false, unreadCount: 0 },
-  { id: 4, name: "Nhóm Đồ Án", lastMsg: "Tối nay họp nhóm nhé", time: "3 giờ", avatar: "https://i.pravatar.cc/150?u=group", online: true, unreadCount: 5 },
-  { id: 5, name: "Nguyễn Văn A", lastMsg: "Ok bạn", time: "1 ngày", avatar: "https://i.pravatar.cc/150?u=a", online: false, unreadCount: 0 },
+const initialContacts = [
+  {
+    id: 4,
+    name: "Nhóm Đồ Án",
+    avatar:
+      "https://ui-avatars.com/api/?name=Nhóm+Đồ+Án&background=0D8ABC&color=fff",
+    online: true,
+  },
 ];
-
-const initialMessages = [
-  { id: 1, senderId: 2, text: "Alo Nhật ơi, cái phần website gốm sứ đến đâu rồi?", time: "09:00 AM", status: "read" },
-  { id: 2, senderId: 1, text: "Đang làm giao diện Chat đây.", time: "09:05 AM", status: "read" },
-  { id: 3, senderId: 2, text: "Ok, chốt làm giao diện trước nhé.", time: "09:06 AM", status: "read" },
-];
-
-const dummyGifs = [
-  "https://media.giphy.com/media/3o7TKSjRrfIPjeiVyM/giphy.gif",
-  "https://media.giphy.com/media/l0HlBO7eyXzSZkJri/giphy.gif",
-  "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif",
-  "https://media.giphy.com/media/yYSSBtDgbbRzq/giphy.gif",
-  "https://media.giphy.com/media/26n6WywJyh39n1pBu/giphy.gif"
-];
-
-const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api',
-  withCredentials: true, 
-  headers: {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json'
-  }
-});
 
 export default function App() {
-  const navigate = useNavigate(); 
-  
-  const [messages, setMessages] = useState<any[]>(initialMessages);
-  const [newMessage, setNewMessage] = useState("");
-  const [selectedContact, setSelectedContact] = useState(contacts[0]);
-  const [activeTab, setActiveTab] = useState("all");
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  
-  const [showWebcam, setShowWebcam] = useState(false);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const navigate = useNavigate();
 
+  const [currentUser] = useState(() => {
+    const savedUser = localStorage.getItem("current_user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
+  const [messages, setMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [selectedContact, setSelectedContact] = useState(initialContacts[0]);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showGifPicker, setShowGifPicker] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
-  const mobileCameraRef = useRef<HTMLInputElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const virtuosoRef = useRef<any>(null);
+
+  // Ép đăng nhập nếu chưa có token
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token || !currentUser) navigate("/login");
+  }, [navigate, currentUser]);
+
+  // Load tin nhắn
+  useEffect(() => {
+    if (!selectedContact) return;
+    const fetchMessages = async () => {
+      try {
+        const response = await api.get("/chat/messages", {
+          params: { conversation_id: selectedContact.id },
+        });
+        const fetched = response.data?.data?.data || [];
+        setMessages(fetched.reverse());
+      } catch (error: any) {
+        if (error.response?.status === 401) {
+          toast.error("Phiên đăng nhập hết hạn!");
+          handleLogout();
+        }
+      }
+    };
+    fetchMessages();
+  }, [selectedContact]);
 
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
-
-  const filteredContacts = contacts.filter((contact) => {
-    const matchesSearch = contact.name.toLowerCase().includes(searchQuery.toLowerCase());
-    if (activeTab === 'unread') return matchesSearch && contact.unreadCount > 0;
-    if (activeTab === 'groups') return matchesSearch && contact.name.toLowerCase().includes("nhóm");
-    return matchesSearch;
-  });
-
-  const sendMessage = (text: string, mediaUrl: string | null = null, mediaType: 'image' | 'file' | 'gif' | null = null, fileName: string = "") => {
-    const newMsg = {
-      id: messages.length + 1,
-      senderId: currentUser.id,
-      text: text,
-      mediaUrl: mediaUrl,
-      mediaType: mediaType,
-      fileName: fileName,
-      status: "sent",
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    
-    setMessages((prev) => [...prev, newMsg]);
-    setIsTyping(true);
-
-    setTimeout(() => {
-      setIsTyping(false);
-      const replyMsg = {
-        id: messages.length + 2,
-        senderId: selectedContact.id,
-        text: "Mình đã nhận được tin nhắn nhé!",
-        status: "read",
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages((prev) => {
-        const updated = prev.map(msg => msg.senderId === currentUser.id ? { ...msg, status: 'read' } : msg);
-        return [...updated, replyMsg];
+    if (messages.length > 0) {
+      virtuosoRef.current?.scrollToIndex({
+        index: messages.length - 1,
+        align: "end",
       });
-    }, 2500);
-  };
+    }
+  }, [messages.length]);
 
-  const handleSendText = (e?: React.SyntheticEvent<HTMLFormElement>) => {
+  // SỬA LỖI NÚT LIKE & GỬI TIN
+  const handleSendText = async (e?: React.SyntheticEvent) => {
     e?.preventDefault();
-    const messageText = newMessage.trim() ? newMessage : "👍";
-    sendMessage(messageText);
-    setNewMessage("");
-    setShowEmojiPicker(false); 
-  };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const fileUrl = URL.createObjectURL(file);
-      if (file.type.startsWith("image/")) {
-        sendMessage("", fileUrl, "image");
-      } else {
-        sendMessage(`Đã gửi file: ${file.name}`, fileUrl, "file", file.name);
-      }
-    }
-  };
+    // Nếu rỗng -> Gửi Like. Nếu có chữ -> Gửi chữ
+    const textToSend = newMessage.trim() ? newMessage.trim() : "👍";
 
-  const handleCameraClick = () => {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
-      mobileCameraRef.current?.click();
-    } else {
-      startWebcam();
-    }
-  };
+    setNewMessage(""); // Reset ô input ngay lập tức
+    setShowEmojiPicker(false);
 
-  const startWebcam = async () => {  
     try {
-      setShowWebcam(true);
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
-      setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
+      const response = await api.post("/chat/messages", {
+        conversation_id: selectedContact.id,
+        body: textToSend,
+      });
+      setMessages((prev) => [...prev, response.data.data]);
     } catch (error) {
-      alert("Không tìm thấy Webcam hoặc bạn chưa cấp quyền truy cập!");
-      setShowWebcam(false);
+      toast.error("Gửi tin nhắn thất bại");
     }
   };
 
-  const closeWebcam = () => { 
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-    setShowWebcam(false);
-  };
+  // SỬA CÁCH UPLOAD ĐỂ TRÁNH LỖI BACKEND
+  const uploadFiles = async (file: File) => {
+    setIsUploading(true);
+    const toastId = toast.loading("Đang gửi file...");
 
-  const captureWebcam = () => { 
-    if (videoRef.current && canvasRef.current) {
-      const context = canvasRef.current.getContext('2d');
-      canvasRef.current.width = videoRef.current.videoWidth;
-      canvasRef.current.height = videoRef.current.videoHeight;
-      context?.drawImage(videoRef.current, 0, 0);
-      const imageUrl = canvasRef.current.toDataURL('image/png');
-      sendMessage("", imageUrl, "image");
-      closeWebcam();
-    }
-  };
+    const formData = new FormData();
+    formData.append("conversation_id", String(selectedContact.id));
+    formData.append("files[]", file);
 
-  const onEmojiClick = (emojiObject: any) => {
-    setNewMessage(prev => prev + emojiObject.emoji);
-  };
-
-  const handleSelectGif = (gifUrl: string) => {
-    sendMessage("", gifUrl, "gif");
-    setShowGifPicker(false);
-  };
-
-  const handleLogout = async () => {
     try {
-      await api.post('/logout');
+      const response = await api.post("/chat/messages/upload", formData); // Route chính xác
+      const newMsgs = response.data?.data || [];
+      setMessages((prev) => [...prev, ...newMsgs]);
+      toast.success("Gửi thành công!", { id: toastId });
+    } catch (error: any) {
+      console.error(error);
+      toast.error("Lỗi gửi file! Hãy kiểm tra log Backend.", { id: toastId });
     } finally {
-      navigate('/login');
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (imageInputRef.current) imageInputRef.current.value = "";
     }
   };
 
-  const renderSidebarContent = () => (
-    <>
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold dark:text-white">Đoạn chat</h1>
-          <div className="flex items-center gap-1.5">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" onClick={() => setIsDarkMode(!isDarkMode)} className="btn-action">
-                  {isDarkMode ? <Sun className="h-4 w-4 text-amber-500" /> : <Moon className="h-4 w-4" />}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Giao diện {isDarkMode ? 'Sáng' : 'Tối'}</TooltipContent>
-            </Tooltip>
+  const handleToggleReaction = async (messageId: number, reaction: string) => {
+    try {
+      const response = await api.post(`/chat/messages/${messageId}/reactions`, {
+        reaction,
+      });
+      const summary = response.data.data.summary;
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId ? { ...m, reactions_summary: summary } : m,
+        ),
+      );
+    } catch (error) {
+      toast.error("Lỗi thả cảm xúc");
+    }
+  };
+  const handleDownload = async (messageId: number, fileName: string) => {
+    const toastId = toast.loading("Đang tải file...");
+    try {
+      // Gọi API download mà bạn đã viết ở Backend
+      const response = await api.post(
+        `/chat/messages/${messageId}/download`,
+        {},
+        { responseType: "blob" },
+      );
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="btn-action">
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Tin nhắn mới</TooltipContent>
-            </Tooltip>
+      // Tạo một URL ảo từ luồng dữ liệu (blob) và ép trình duyệt tải xuống
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", fileName || "tai_lieu");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" onClick={handleLogout} className="btn-action hover:text-red-500 dark:hover:text-red-400">
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Đăng xuất</TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-        
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
-          <Input 
-            placeholder="Tìm kiếm" 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 border-none dark:text-zinc-100 focus-visible:ring-1 focus-visible:ring-zinc-400 placeholder:text-zinc-500" 
-          />
-        </div>
+      toast.success("Tải xong!", { id: toastId });
+    } catch (error) {
+      toast.error("Lỗi tải file", { id: toastId });
+    }
+  };
 
-        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all">Tất cả</TabsTrigger>
-            <TabsTrigger value="unread">Chưa đọc</TabsTrigger>
-            <TabsTrigger value="groups">Nhóm</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-      
-      <ScrollArea className="flex-1">
-        {filteredContacts.length > 0 ? (
-          filteredContacts.map((contact) => (
-            <div key={contact.id} onClick={() => setSelectedContact(contact)} className={`contact-item ${selectedContact.id === contact.id ? "contact-item-active" : ""}`}>
-              <div className="relative">
-                <Avatar className="h-12 w-12"><AvatarImage src={contact.avatar} /><AvatarFallback>{contact.name.charAt(0)}</AvatarFallback></Avatar>
-                {contact.online && <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-zinc-900 bg-green-500"></span>}
-              </div>
-              <div className="flex-1 overflow-hidden">
-                <div className="flex justify-between items-center mb-0.5">
-                  <span className="font-semibold text-[15px] truncate dark:text-zinc-100">{contact.name}</span>
-                </div>
-                <div className="flex items-center justify-between text-[13px] text-zinc-500">
-                  <p className="truncate flex-1 pr-2">{contact.lastMsg}</p>
-                  {contact.unreadCount > 0 ? (
-                    <Badge variant="destructive" className="ml-auto flex h-5 w-5 items-center justify-center rounded-full p-0 text-[10px]">
-                      {contact.unreadCount}
-                    </Badge>
-                  ) : (
-                    <span className="shrink-0 text-[11px]">{contact.time}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="p-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
-            Không tìm thấy kết quả nào.
-          </div>
-        )}
-      </ScrollArea>
-    </>
-  );
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
 
   return (
     <TooltipProvider>
-      <div className="app-wrapper">
-        
-        <Dialog open={showWebcam} onOpenChange={(open) => { if (!open) closeWebcam(); }}>
-          <DialogContent className="sm:max-w-[600px] bg-zinc-900 border-zinc-800 text-white">
-            <DialogHeader>
-              <DialogTitle>Chụp ảnh bằng Webcam</DialogTitle>
-            </DialogHeader>
-            <div className="flex flex-col items-center">
-              <video ref={videoRef} autoPlay playsInline className="rounded-lg w-full bg-black shadow-inner border border-zinc-700" />
-              <canvas ref={canvasRef} className="hidden" />
-              <Button onClick={captureWebcam} className="mt-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8 py-6 font-bold shadow-lg">
-                <Camera className="h-6 w-6 mr-2" /> Chụp ngay
+      <div className={`app-wrapper ${isDarkMode ? "dark" : ""}`}>
+        <Toaster position="top-center" />
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={(e) =>
+            e.target.files?.[0] && uploadFiles(e.target.files[0])
+          }
+          className="hidden"
+        />
+        <input
+          type="file"
+          accept="image/*"
+          ref={imageInputRef}
+          onChange={(e) =>
+            e.target.files?.[0] && uploadFiles(e.target.files[0])
+          }
+          className="hidden"
+        />
+
+        {/* SIDEBAR */}
+        <div className="sidebar flex flex-col border-r dark:border-zinc-800 bg-white dark:bg-zinc-900 w-[320px]">
+          <div className="p-4 flex justify-between items-center border-b dark:border-zinc-800">
+            <div className="flex items-center gap-2">
+              <Avatar className="w-10 h-10 border shadow-sm">
+                <AvatarImage
+                  src={`https://ui-avatars.com/api/?name=${currentUser?.name}&background=random`}
+                />
+              </Avatar>
+              <h1 className="text-lg font-bold dark:text-white">Đoạn chat</h1>
+            </div>
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsDarkMode(!isDarkMode)}
+              >
+                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleLogout}>
+                <LogOut size={18} className="text-red-500" />
               </Button>
             </div>
-          </DialogContent>
-        </Dialog>
-
-        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
-        <input type="file" accept="image/*" ref={imageInputRef} onChange={handleFileChange} className="hidden" />
-        <input type="file" accept="image/*" capture="environment" ref={mobileCameraRef} onChange={handleFileChange} className="hidden" />
-
-        <div className="sidebar">
-          {renderSidebarContent()}
+          </div>
+          <ScrollArea className="flex-1">
+            {initialContacts.map((c) => (
+              <div
+                key={c.id}
+                onClick={() => setSelectedContact(c)}
+                className={`p-3 mx-2 mt-2 flex items-center gap-3 rounded-xl cursor-pointer transition-all ${selectedContact.id === c.id ? "bg-blue-50 dark:bg-blue-900/20 shadow-sm" : "hover:bg-zinc-50 dark:hover:bg-zinc-800/50"}`}
+              >
+                <Avatar>
+                  <AvatarImage src={c.avatar} />
+                </Avatar>
+                <span
+                  className={`font-semibold text-[15px] ${selectedContact.id === c.id ? "text-blue-600 dark:text-blue-400" : "dark:text-white"}`}
+                >
+                  {c.name}
+                </span>
+              </div>
+            ))}
+          </ScrollArea>
         </div>
 
-        <div className="chat-container">
-          <div className="flex items-center justify-between border-b shadow-sm dark:border-zinc-800 p-3 h-[76px]">
+        {/* KHUNG CHAT TÍNH NĂNG */}
+        <div className="chat-container flex-1 flex flex-col dark:bg-zinc-950">
+          <div className="h-[70px] border-b dark:border-zinc-800 flex items-center px-4 justify-between bg-white dark:bg-zinc-900 shadow-sm z-10">
             <div className="flex items-center gap-3">
-              
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="md:hidden">
-                    <Menu className="h-5 w-5 dark:text-white" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="p-0 w-[300px] flex flex-col bg-white dark:bg-zinc-900 border-r dark:border-zinc-800">
-                  {renderSidebarContent()}
-                </SheetContent>
-              </Sheet>
-
-              <Avatar className="h-10 w-10"><AvatarImage src={selectedContact.avatar} /><AvatarFallback>{selectedContact.name.charAt(0)}</AvatarFallback></Avatar>
-              <div className="flex flex-col">
-                <h2 className="font-semibold text-[15px] leading-tight dark:text-zinc-100">{selectedContact.name}</h2>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{selectedContact.online ? "Đang hoạt động" : "Ngoại tuyến"}</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="btn-icon"><Phone className="h-5 w-5" /></Button>
-              <Button variant="ghost" size="icon" className="btn-icon"><Video className="h-5 w-5" /></Button>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="btn-icon">
-                    <MoreVertical className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem>Xem trang cá nhân</DropdownMenuItem>
-                  <DropdownMenuItem>Tắt thông báo</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950">Chặn người dùng</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Avatar>
+                <AvatarImage src={selectedContact.avatar} />
+              </Avatar>
+              <h2 className="font-bold text-[16px] dark:text-white">
+                {selectedContact.name}
+              </h2>
             </div>
           </div>
 
-          <div className="flex-1 bg-zinc-50/50 dark:bg-zinc-950/50" onClick={() => { setShowEmojiPicker(false); setShowGifPicker(false); }}>
+          <div
+            className="flex-1 overflow-hidden bg-[#F0F2F5] dark:bg-zinc-950"
+            onClick={() => setShowEmojiPicker(false)}
+          >
             <Virtuoso
-              style={{ height: '100%' }}
+              ref={virtuosoRef}
               data={messages}
-              initialTopMostItemIndex={messages.length - 1}
-              followOutput="smooth"
-              itemContent={(_index, msg) => {
-                const isMe = msg.senderId === currentUser.id;
+              itemContent={(_, msg) => {
+                const senderId =
+                  msg.sender?.id || msg.participation?.messageable_id;
+                const isMe = senderId === currentUser?.id;
+                const senderName = msg.sender?.name || "Người dùng";
+                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(senderName)}&background=random&color=fff`;
+
                 return (
-                  <div className={`flex w-full px-4 py-2 ${isMe ? "justify-end" : "justify-start"}`}>
-                    <div className={`flex max-w-[65%] flex-col gap-1 ${isMe ? "items-end" : "items-start"}`}>
-                      {msg.mediaType === 'image' ? (
-                        <div className="rounded-2xl overflow-hidden border dark:border-zinc-800 max-w-[300px]">
-                           <img src={msg.mediaUrl} alt="sent image" className="w-full h-auto object-cover" />
-                        </div>
-                      ) : msg.mediaType === 'gif' ? (
-                        <div className="rounded-2xl overflow-hidden max-w-[250px]">
-                           <img src={msg.mediaUrl} alt="sent gif" className="w-full h-auto object-cover" />
-                        </div>
-                      ) : msg.mediaType === 'file' ? (
-                         <div className={`rounded-2xl px-4 py-3 flex items-center gap-2 ${isMe ? "msg-file-me" : "msg-file-other"}`}>
-                           <Paperclip className="h-5 w-5 shrink-0" />
-                           <span className="text-sm underline break-all">{msg.text}</span>
-                         </div>
-                      ) : msg.text === "👍" ? (
-                        <div className="text-4xl pr-2">{msg.text}</div>
-                      ) : (
-                        <div className={isMe ? "msg-bubble-me" : "msg-bubble-other"}>
-                          {msg.text}
-                        </div>
+                  <div
+                    className={`flex w-full px-4 py-2 ${isMe ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`group flex items-end gap-2 max-w-[75%] ${isMe ? "flex-row-reverse" : "flex-row"}`}
+                    >
+                      {/* Avatar người gửi (Chỉ hiện nếu không phải là mình) */}
+                      {!isMe && (
+                        <Avatar className="w-8 h-8 mb-1 flex-shrink-0 shadow-sm">
+                          <AvatarImage src={avatarUrl} />
+                        </Avatar>
                       )}
 
-                      <div className="flex items-center gap-1 mx-1">
-                        <span className="text-[11px] font-medium text-zinc-400">{msg.time}</span>
-                        {isMe && msg.status === "sent" && <Check className="w-3 h-3 text-zinc-400" />}
-                        {isMe && msg.status === "read" && <CheckCheck className="w-3 h-3 text-blue-500" />}
+                      <div
+                        className={`relative flex flex-col ${isMe ? "items-end" : "items-start"}`}
+                      >
+                        {/* Tên người gửi */}
+                        {!isMe && (
+                          <span className="text-xs text-zinc-500 mb-1 ml-1">
+                            {senderName}
+                          </span>
+                        )}
+
+                        <div
+                          className={`flex items-center gap-2 ${isMe ? "flex-row-reverse" : "flex-row"}`}
+                        >
+                          {/* Nội dung */}
+                          {msg.type === "image" ? (
+                            <div className="rounded-2xl overflow-hidden border-2 border-white shadow-sm bg-white p-1">
+                              <img
+                                src={msg.data?.file_url}
+                                alt="attachment"
+                                className="max-w-[250px] rounded-xl cursor-pointer hover:opacity-90"
+                                onClick={() =>
+                                  window.open(msg.data?.file_url, "_blank")
+                                }
+                              />
+                            </div>
+                          ) : msg.type === "file" ? (
+                            // GIAO DIỆN HIỂN THỊ TỆP ĐÍNH KÈM
+                            <div
+                              onClick={() =>
+                                handleDownload(msg.id, msg.data?.original_name)
+                              }
+                              className={`p-3 rounded-2xl flex items-center gap-3 cursor-pointer shadow-sm hover:opacity-90 transition-opacity ${isMe ? "bg-[#0084FF] text-white" : "bg-white dark:bg-zinc-800 dark:text-zinc-100 border"}`}
+                            >
+                              <div className="bg-black/10 p-2 rounded-full">
+                                <Paperclip size={18} />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-medium underline text-sm truncate max-w-[200px]">
+                                  {msg.data?.original_name || "Tệp đính kèm"}
+                                </span>
+                                <span className="text-[11px] opacity-70">
+                                  Nhấp để tải xuống
+                                </span>
+                              </div>
+                            </div>
+                          ) : msg.body === "👍" ? (
+                            <div className="text-5xl animate-bounce">
+                              {msg.body}
+                            </div>
+                          ) : (
+                            <div
+                              className={`rounded-2xl px-4 py-2.5 text-[15px] shadow-sm break-words ${isMe ? "bg-[#0084FF] text-white" : "bg-white dark:bg-zinc-800 dark:text-zinc-100 border border-zinc-100 dark:border-zinc-700"}`}
+                            >
+                              {msg.body}
+                            </div>
+                          )}
+                          {/* KẾT THÚC ĐOẠN RENDER NỘI DUNG */}
+
+                          {/* Menu Thả tim (Chỉ hiện khi hover) */}
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 bg-white dark:bg-zinc-800 rounded-full shadow border p-1 cursor-pointer">
+                            <button
+                              onClick={() => handleToggleReaction(msg.id, "❤️")}
+                              className="hover:scale-125 transition-transform text-lg"
+                            >
+                              ❤️
+                            </button>
+                            <button
+                              onClick={() => handleToggleReaction(msg.id, "😆")}
+                              className="hover:scale-125 transition-transform text-lg"
+                            >
+                              😆
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Hiển thị Reaction */}
+                        {msg.reactions_summary &&
+                          Object.keys(msg.reactions_summary).length > 0 && (
+                            <div
+                              className={`flex gap-1 bg-white dark:bg-zinc-700 rounded-full px-2.5 py-0.5 shadow-md border border-zinc-100 text-[12px] absolute -bottom-3 ${isMe ? "right-2" : "left-2"} z-10`}
+                            >
+                              {Object.entries(msg.reactions_summary).map(
+                                ([e, c]) => (
+                                  <span key={e}>
+                                    {e} {c as number}
+                                  </span>
+                                ),
+                              )}
+                            </div>
+                          )}
                       </div>
                     </div>
                   </div>
                 );
               }}
-              components={{
-                Footer: () => (
-                  <div className="px-4 py-2 h-16">
-                    {isTyping && (
-                      <div className="typing-indicator">
-                        <div className="typing-dot"></div>
-                        <div className="typing-dot"></div>
-                        <div className="typing-dot"></div>
-                      </div>
-                    )}
-                  </div>
-                )
-              }}
             />
           </div>
 
+          {/* THANH NHẬP LIỆU (Input) */}
           <div className="p-3 bg-white dark:bg-zinc-900 border-t dark:border-zinc-800">
-            <form onSubmit={handleSendText} className="flex items-center gap-2">
-              <div className="flex items-center gap-1"> 
-                
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button type="button" onClick={() => fileInputRef.current?.click()} variant="ghost" size="icon" className="btn-icon">
-                      <Paperclip className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Đính kèm file</TooltipContent>
-                </Tooltip>
+            <form onSubmit={handleSendText} className="flex gap-2 items-center">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-[#0084FF] rounded-full hover:bg-zinc-100"
+                disabled={isUploading}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Paperclip size={22} />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-[#0084FF] rounded-full hover:bg-zinc-100"
+                disabled={isUploading}
+                onClick={() => imageInputRef.current?.click()}
+              >
+                <ImageIcon size={22} />
+              </Button>
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button type="button" onClick={handleCameraClick} variant="ghost" size="icon" className="btn-icon">
-                      <Camera className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Chụp ảnh</TooltipContent>
-                </Tooltip>
-                
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button type="button" onClick={() => imageInputRef.current?.click()} variant="ghost" size="icon" className="btn-icon">
-                      <ImageIcon className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Đính kèm ảnh</TooltipContent>
-                </Tooltip>
-
-                <Popover open={showGifPicker} onOpenChange={setShowGifPicker}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <PopoverTrigger asChild>
-                        <Button type="button" variant="ghost" size="icon" className={`btn-icon ${showGifPicker ? 'bg-zinc-200 dark:bg-zinc-800' : ''}`}>
-                          <Sticker className="h-5 w-5" />
-                        </Button>
-                      </PopoverTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>Gửi GIF</TooltipContent>
-                  </Tooltip>
-                  <PopoverContent side="top" align="start" className="w-80 h-64 overflow-y-auto p-2" sideOffset={15}>
-                    <div className="grid grid-cols-2 gap-2">
-                      {dummyGifs.map((gif, index) => (
-                        <img 
-                          key={index} 
-                          src={gif} 
-                          alt="gif" 
-                          className="w-full h-24 object-cover rounded-md cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => handleSelectGif(gif)}
-                        />
-                      ))}
-                    </div>
-                  </PopoverContent>
-                </Popover>
-
-              </div>
-
-              <div className="relative flex-1 flex items-center">
-                <Input 
+              <div className="relative flex-1">
+                <Input
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Aa" 
-                  className="chat-input"
+                  placeholder="Nhập tin nhắn..."
+                  className="w-full rounded-full bg-[#F0F2F5] dark:bg-zinc-800 border-none pl-4 pr-10 py-[22px] text-[15px]"
+                  disabled={isUploading}
                 />
-                
-                <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
-                  <PopoverTrigger asChild>
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="icon" 
-                      className={`absolute right-1 text-blue-500 hover:bg-transparent hover:text-blue-600 rounded-full ${showEmojiPicker ? 'text-blue-700' : ''}`}
-                    >
-                      <Smile className="h-5 w-5" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent side="top" align="end" className="p-0 border-none shadow-xl bg-transparent" sideOffset={15}>
-                    <EmojiPicker 
-                      onEmojiClick={onEmojiClick} 
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="absolute right-1 top-1.5 text-[#0084FF] rounded-full hover:bg-zinc-200"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                >
+                  <Smile size={22} />
+                </Button>
+                {showEmojiPicker && (
+                  <div className="absolute bottom-14 right-0 z-50 shadow-2xl">
+                    <EmojiPicker
+                      onEmojiClick={(o) => setNewMessage((p) => p + o.emoji)}
                       theme={isDarkMode ? Theme.DARK : Theme.LIGHT}
-                      searchDisabled={false}
-                      skinTonesDisabled={true}
                     />
-                  </PopoverContent>
-                </Popover>
-
+                  </div>
+                )}
               </div>
 
-              <Button type="submit" size="icon" className="rounded-full h-10 w-10 bg-transparent text-blue-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 shrink-0 shadow-none transition-all">
-                {newMessage.trim() ? <Send className="h-6 w-6" /> : <ThumbsUp className="h-6 w-6" />}
+              <Button
+                type="submit"
+                variant="ghost"
+                size="icon"
+                className="text-[#0084FF] hover:bg-transparent"
+                disabled={isUploading}
+              >
+                {newMessage.trim() ? (
+                  <Send size={28} />
+                ) : (
+                  <ThumbsUp size={30} />
+                )}
               </Button>
             </form>
           </div>
