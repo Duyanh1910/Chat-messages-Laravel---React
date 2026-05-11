@@ -13,6 +13,8 @@ use Lorisleiva\Actions\Concerns\AsAction;
 use Modules\Chat\Presentation\Requests\Message\SendMessagesRequest;
 use Musonza\Chat\Facades\ChatFacade as Chat;
 use Musonza\Chat\Models\Message;
+use Modules\Chat\Domain\DTOs\MessageDTO;
+use Modules\Chat\Domain\Events\Resource\MessageSent;
 
 final class SendMessagesAction
 {
@@ -31,7 +33,7 @@ final class SendMessagesAction
     }
 
     /**
-     * @return Message
+     * @return $messageDTO
      *
      * @throws Exception
      */
@@ -50,10 +52,13 @@ final class SendMessagesAction
         }
 
         $message = Chat::message($body)
-            ->from($sender)
-            ->to($conversation)
-            ->send();
+               ->from($sender)
+               ->to($conversation)
+               ->send();
 
-        return $message;
+        $messageDTO = MessageDTO::fromModel($message);
+        broadcast(new MessageSent($messageDTO))->toOthers();
+
+        return $messageDTO;
     }
 }

@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 use Lorisleiva\Actions\Concerns\AsAction;
 use Modules\Chat\Presentation\Requests\Attachment\UploadAttachmentRequest;
 use Musonza\Chat\Facades\ChatFacade as Chat;
+use Modules\Chat\Domain\DTOs\MessageDTO;
+use Modules\Chat\Domain\Events\Resource\MessageSent;
 
 final class UploadAttachmentAction
 {
@@ -47,26 +49,30 @@ final class UploadAttachmentAction
         $type = 'text';
         $data = [];
         $messages = [];
-
         $messageBody = empty($body) ? "Đã gửi tệp đính kèm" : $body;
 
         foreach ($files as $file) {
             $path = $file->store('messages_files', 'private');
             $mimeType = $file->getMimeType();
             $type = str_starts_with($mimeType, 'image/') ? 'image' : 'file';
+
             $data = [
                 'file_path' => $path,
                 'original_name' => $file->getClientOriginalName(),
                 'size' => $file->getSize(),
                 'mime_type' => $mimeType,
             ];
+
             $message = Chat::message($messageBody)
                 ->type($type)
                 ->data($data)
                 ->from($user)
                 ->to($conversation)
                 ->send();
-            $messages[] = $message;
+
+            $messageDTO = MessageDTO::fromModel($message);
+            broadcast(new MessageSent($messageDTO))->toOthers();
+            $messages[] = $messageDTO->toArray();
         }
 
         return $messages;

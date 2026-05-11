@@ -72,7 +72,7 @@ export default function Login() {
 
       try {
         if (view === "login") {
-          const response = await api.post("/login", {
+          const response = await api.post("auth/login", {
             login_id: formData.emailOrPhone, // Giả định BE đang dùng cột email để đăng nhập
             password: formData.password,
           });

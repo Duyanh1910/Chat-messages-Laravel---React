@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Modules\Auth\Register as AuthRegister;
 use Modules\Chat\Register as ChatRegister;
+use Illuminate\Support\Facades\Broadcast;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,6 +36,14 @@ class AppServiceProvider extends ServiceProvider
         $publicRoutes = [];
         $protectedRoutes = [];
 
+        Broadcast::routes([
+            'middleware' => ['auth:api'],
+        ]);
+
+        if (file_exists(base_path('routes/channels.php'))) {
+            require base_path('routes/channels.php');
+        }
+
         foreach (self::$registerClasses as $class) {
             $register = app($class);
             $register->boot();
@@ -46,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
                 $protectedRoutes[] = $register->getRoutePath();
             }
         }
+
         Route::prefix('api')
             ->middleware([])
             ->group(function () use ($publicRoutes) {
