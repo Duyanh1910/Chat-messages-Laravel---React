@@ -24,7 +24,6 @@ export default function Login() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Đã sửa lại đúng đường dẫn thư mục auth của Backend
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -72,31 +71,23 @@ export default function Login() {
       try {
         if (view === "login") {
           const response = await api.post("auth/login", {
-            login_id: formData.emailOrPhone, // Giả định BE đang dùng cột email để đăng nhập
+            login_id: formData.emailOrPhone, 
             password: formData.password,
           });
 
-          // Trích xuất dữ liệu từ cấu trúc HasApiResponse của bạn
           const responseData = response.data?.data || response.data;
           const token = responseData.access_token || responseData.token;
           const user = responseData.user;
 
           if (token) {
-            // 1. Lưu Token để các API khác gọi
             localStorage.setItem("access_token", token);
-
-            // 2. Lưu User Info để hiển thị ở màn hình Chat
             if (user) {
               localStorage.setItem("current_user", JSON.stringify(user));
             }
-
             toast.success(response.data?.message || "Đăng nhập thành công!");
-
-            // Chuyển hướng sang màn hình Chat
             navigate("/chat");
           }
         } else if (view === "register") {
-          // GỌI API ĐĂNG KÝ
           const response = await api.post("/register", {
             name: formData.name,
             email: formData.emailOrPhone,
@@ -109,7 +100,6 @@ export default function Login() {
           );
           changeView("login");
         } else if (view === "forgot") {
-          // GỌI API QUÊN MẬT KHẨU
           const response = await api.post("/forgot-password", {
             email: formData.emailOrPhone,
           });
@@ -121,7 +111,6 @@ export default function Login() {
           );
         }
       } catch (error: any) {
-        // Xử lý lỗi trả về chuẩn xác từ Validation của Laravel
         const message =
           error.response?.data?.message ||
           "Có lỗi xảy ra, vui lòng thử lại sau.";
