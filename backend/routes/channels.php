@@ -1,23 +1,24 @@
 <?php
 
+declare(strict_types=1);
 use Illuminate\Support\Facades\Broadcast;
-use Illuminate\Support\Facades\DB;
+use Musonza\Chat\Facades\ChatFacade as Chat;
 use Illuminate\Support\Facades\Log;
 
-Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
-});
+Broadcast::channel('conversation.{conversationId}', function ($user, $conversationId) {
 
-Broadcast::channel(
-    'conversation.{conversationId}',
-    function ($user, $conversationId) {
-        Log::info("🚀 ĐÃ VÀO KÊNH THÀNH CÔNG! User: {$user->name} | ID: {$user->id} đang xin vào phòng: {$conversationId}");
+    Log::info("ĐÃ VÀO KÊNH THÀNH CÔNG! User ID: " . $user->id);
+    try {
+        $conversation = Chat::conversations()->getById($conversationId);
+        if (!$conversation) {
+            return false;
+        }
 
-        // Tạm thời cho phép tất cả
-        return true;
-        // return DB::table('mc_participants')
-        //     ->where('conversation_id', $conversationId)
-        //     ->where('messageable_id', $user->id)
-        //     ->exists();
+        $participants = $conversation->getParticipants();
+        return $participants->contains(function ($participant) use ($user) {
+            return $participant->id === $user->id;
+        });
+    } catch (\Exception $e) {
+        return false;
     }
-);
+}, ['guards' => ['api']]);
